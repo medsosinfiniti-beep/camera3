@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>📷 Camera Pro - GeoSense</title>
+    <style>
+        /* ===== RESET & DASAR ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0b1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: #1a2f44;
+            border-radius: 32px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            border: 1px solid #3a5a7a;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #6db3f2;
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 span {
+            color: #34a853;
+        }
+
+        .header .badge {
+            background: #2d4b66;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #aac7e0;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: #8ab3d0;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        /* ===== RATIO SELECTOR ===== */
+        .ratio-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .ratio-selector .ratio-btn {
+            background: #0f2638;
+            border: 2px solid #2d4b66;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #8ab3d0;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .ratio-selector .ratio-btn:hover {
+            border-color: #6db3f2;
+            color: #fff;
+        }
+
+        .ratio-selector .ratio-btn.active {
+            border-color: #34a853;
+            background: #1a3a2a;
+            color: #6db3f2;
+            box-shadow: 0 0 16px rgba(52, 168, 83, 0.25);
+        }
+
+        /* ===== VIDEO WRAPPER ===== */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 0 0 12px 0;
+            transition: aspect-ratio 0.3s ease;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .video-wrapper canvas {
+            display: none;
+        }
+
+        .video-wrapper .ratio-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 14px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #aac7e0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .controls button {
+            background: #2d4b66;
+            border: none;
+            border-radius: 60px;
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .controls button:active {
+            transform: scale(0.94);
+        }
+
+        .controls .btn-capture {
+            background: #34a853;
+        }
+        .controls .btn-capture:hover {
+            background: #2d9248;
+        }
+
+        .controls .btn-switch {
+            background: #5a7a9a;
+        }
+        .controls .btn-switch:hover {
+            background: #4a6a8a;
+        }
+
+        .controls .btn-upload {
+            background: #f9ab00;
+            color: #1a2f44;
+        }
+        .controls .btn-upload:hover {
+            background: #e09e00;
+        }
+        .controls .btn-upload:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .controls .btn-close {
+            background: #ea4335;
+        }
+        .controls .btn-close:hover {
+            background: #d33426;
+        }
+
+        /* ===== PREVIEW BOX ===== */
+        .preview-box {
+            margin-top: 14px;
+            display: none;
+            background: #0f2638;
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid #2d4b66;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 220px;
+            border-radius: 12px;
+            border: 2px solid #3a5a7a;
+            object-fit: contain;
+        }
+
+        .preview-box .caption {
+            font-size: 0.85rem;
+            color: #aac7e0;
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        .preview-box .caption a {
+            color: #6db3f2;
+            text-decoration: underline;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2b3c;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 14px;
+            }
+            .controls button {
+                padding: 12px 12px;
+                font-size: 0.8rem;
+                min-width: 60px;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            .ratio-selector .ratio-btn {
+                padding: 6px 14px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .controls button {
+                font-size: 0.7rem;
+                padding: 10px 8px;
+                min-width: 50px;
+            }
+            .ratio-selector {
+                gap: 6px;
+            }
+            .ratio-selector .ratio-btn {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>📷 <span>Camera</span> Pro</h1>
+            <span class="badge">General</span>
+        </div>
+        <div class="subtitle">Ambil foto dengan berbagai rasio &amp; upload ke cloud</div>
+
+        <!-- RATIO SELECTOR -->
+        <div class="ratio-selector" id="ratioSelector">
+            <button class="ratio-btn" data-ratio="1:1" onclick="setRatio('1:1')">⬜ 1:1</button>
+            <button class="ratio-btn active" data-ratio="9:16" onclick="setRatio('9:16')">📱 9:16</button>
+            <button class="ratio-btn" data-ratio="16:9" onclick="setRatio('16:9')">🖥️ 16:9</button>
+        </div>
+
+        <!-- VIDEO WRAPPER -->
+        <div class="video-wrapper" id="videoWrapper">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="ratio-overlay" id="ratioOverlay">9:16</div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+            <button class="btn-switch" onclick="switchCamera()">🔄 Ganti</button>
+            <button class="btn-capture" onclick="takePhoto()">📸 Jepret</button>
+            <button class="btn-upload" id="uploadBtn" onclick="uploadPhoto()" disabled>⬆️ Upload</button>
+            <button class="btn-close" onclick="closeWindow()">✕ Tutup</button>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-box" id="previewBox">
+            <img id="previewImg" src="" alt="Preview" />
+            <div class="caption" id="previewCaption">Foto siap diupload</div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ================================================================
+        //  ⚙️ KONFIGURASI URL BACKEND — ISI DI BARIS 80
+        // ================================================================
+        // ★★★ TEMPATKAN URL GAS ANDA DI BAWAH INI ★★★
+        // Contoh: const GAS_URL = 'https://script.google.com/macros/s/AKfycbxI.../exec';
+        const GAS_URL = '';  // <-- ISI URL ANDA DI ANTARA TANDA KUTIP
+
+        // ================================================================
+        //  STATE
+        // ================================================================
+        let stream = null;
+        let currentFacing = 'environment';
+        let currentRatio = '9:16';
+        let capturedImageData = null;
+        let isUploading = false;
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('videoWrapper');
+        const previewBox = document.getElementById('previewBox');
+        const previewImg = document.getElementById('previewImg');
+        const previewCaption = document.getElementById('previewCaption');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const ratioOverlay = document.getElementById('ratioOverlay');
+        const ratioBtns = document.querySelectorAll('.ratio-btn');
+
+        // ================================================================
+        //  FUNGSI BANTUAN
+        // ================================================================
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // ================================================================
+        //  RATIO
+        // ================================================================
+        function setRatio(ratio) {
+            currentRatio = ratio;
+            ratioBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.ratio === ratio);
+            });
+            let ar;
+            switch (ratio) {
+                case '1:1':
+                    ar = '1 / 1';
+                    break;
+                case '9:16':
+                    ar = '9 / 16';
+                    break;
+                case '16:9':
+                    ar = '16 / 9';
+                    break;
+                default:
+                    ar = '9 / 16';
+            }
+            wrapper.style.aspectRatio = ar;
+            ratioOverlay.textContent = ratio;
+            showToast('📐 Rasio: ' + ratio);
+        }
+
+        // ================================================================
+        //  KAMERA
+        // ================================================================
+        async function startCamera(facingMode = 'environment') {
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                await video.play();
+                currentFacing = facingMode;
+                showToast('📷 Kamera aktif');
+            } catch (err) {
+                showToast('❌ Gagal akses kamera: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        function switchCamera() {
+            const newFacing = (currentFacing === 'environment') ? 'user' : 'environment';
+            startCamera(newFacing);
+        }
+
+        // ================================================================
+        //  AMBIL FOTO
+        // ================================================================
+        function takePhoto() {
+            if (!stream) {
+                showToast('⚠️ Kamera belum aktif');
+                return;
+            }
+
+            const vw = video.videoWidth || 640;
+            const vh = video.videoHeight || 480;
+
+            let cropW, cropH, cropX, cropY;
+
+            switch (currentRatio) {
+                case '1:1': {
+                    const size = Math.min(vw, vh);
+                    cropW = size;
+                    cropH = size;
+                    cropX = (vw - size) / 2;
+                    cropY = (vh - size) / 2;
+                    break;
+                }
+                case '9:16': {
+                    const targetW = vh * (9 / 16);
+                    if (targetW <= vw) {
+                        cropW = targetW;
+                        cropH = vh;
+                        cropX = (vw - targetW) / 2;
+                        cropY = 0;
+                    } else {
+                        const targetH = vw * (16 / 9);
+                        cropW = vw;
+                        cropH = targetH;
+                        cropX = 0;
+                        cropY = (vh - targetH) / 2;
+                    }
+                    break;
+                }
+                case '16:9': {
+                    const targetH = vw * (9 / 16);
+                    if (targetH <= vh) {
+                        cropW = vw;
+                        cropH = targetH;
+                        cropX = 0;
+                        cropY = (vh - targetH) / 2;
+                    } else {
+                        const targetW = vh * (16 / 9);
+                        cropW = targetW;
+                        cropH = vh;
+                        cropX = (vw - targetW) / 2;
+                        cropY = 0;
+                    }
+                    break;
+                }
+                default: {
+                    cropW = vw;
+                    cropH = vh;
+                    cropX = 0;
+                    cropY = 0;
+                }
+            }
+
+            cropW = Math.round(cropW);
+            cropH = Math.round(cropH);
+            cropX = Math.round(cropX);
+            cropY = Math.round(cropY);
+
+            canvas.width = cropW;
+            canvas.height = cropH;
+            ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.95);
+
+            previewImg.src = capturedImageData;
+            previewBox.style.display = 'block';
+            previewCaption.textContent = '📸 Foto siap diupload — klik "Upload" untuk mengirim.';
+            uploadBtn.disabled = false;
+            showToast('✅ Foto berhasil diambil (' + currentRatio + ')');
+        }
+
+        // ================================================================
+        //  UPLOAD KE GAS
+        // ================================================================
+        async function uploadPhoto() {
+            if (!capturedImageData) {
+                showToast('⚠️ Ambil foto dulu');
+                return;
+            }
+            if (!GAS_URL) {
+                showToast('⚠️ URL backend belum diisi di skrip (baris 80)');
+                return;
+            }
+            if (isUploading) return;
+
+            isUploading = true;
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Mengirim...';
+            previewCaption.textContent = '⏳ Mengirim foto ke server...';
+
+            try {
+                const payload = {
+                    action: 'uploadPhoto',
+                    filename: 'photo_' + Date.now() + '.jpg',
+                    imageData: capturedImageData,
+                    ratio: currentRatio
+                };
+
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText || 'Gagal upload');
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    const fileUrl = result.data?.url || '#';
+                    previewCaption.innerHTML =
+                        '✅ Foto berhasil diupload! <br><a href="' + fileUrl +
+                        '" target="_blank" style="color:#6db3f2;">📁 Lihat di Drive</a>';
+                    showToast('✅ Upload sukses!');
+                    if (window.parent !== window) {
+                        window.parent.postMessage({ type: 'photoUploaded', url: fileUrl }, '*');
+                    }
+                } else {
+                    throw new Error(result.error || 'Upload gagal');
+                }
+            } catch (err) {
+                showToast('❌ Error: ' + err.message);
+                previewCaption.textContent = '❌ Gagal upload: ' + err.message;
+            } finally {
+                isUploading = false;
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '⬆️ Upload';
+            }
+        }
+
+        // ================================================================
+        //  TUTUP
+        // ================================================================
+        function closeWindow() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'cameraClosed' }, '*');
+            } else {
+                window.close();
+            }
+        }
+
+        // ================================================================
+        //  INISIALISASI
+        // ================================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set rasio awal 9:16
+            setRatio('9:16');
+            startCamera('environment');
+
+            // Jika URL tidak diisi, beri peringatan di konsol
+            if (!GAS_URL) {
+                console.warn('⚠️ GAS_URL belum diisi. Upload tidak akan berfungsi.');
+            } else {
+                console.log('✅ GAS_URL terkonfigurasi.');
+            }
+        });
+
+        // ================================================================
+        //  LISTENER DARI PARENT (jika dalam iframe)
+        // ================================================================
+        window.addEventListener('message', function(event) {
+            if (event.data?.type === 'capture') takePhoto();
+            if (event.data?.type === 'upload') uploadPhoto();
+            if (event.data?.type === 'close') closeWindow();
+            if (event.data?.type === 'setRatio') setRatio(event.data.ratio);
+        });
+
+        console.log('📷 Camera Pro siap — rasio: ' + currentRatio);
+    </script>
+</body>
+</html>
